@@ -189,12 +189,30 @@ class GeoShareApp {
     }
 
     setupOrientationTracking() {
+        // Request permission for iOS devices
+        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+            DeviceOrientationEvent.requestPermission()
+                .then(permissionState => {
+                    if (permissionState === 'granted') {
+                        this.addOrientationListener();
+                    }
+                })
+                .catch(console.error);
+        } else {
+            // Add listener directly for non-iOS devices
+            this.addOrientationListener();
+        }
+    }
+    
+    addOrientationListener() {
         window.addEventListener('deviceorientation', (event) => {
+            // Get device orientation
             const compassHeading = event.alpha || 0;
-            
+            console.log('Device orientation:', compassHeading); // Debug logging
+    
             // Update compass display with new orientation
             if (this.currentLocation) {
-                this.updateCompasses();
+                this.updateCompasses(compassHeading);
             }
     
             // Broadcast orientation if in a room
@@ -202,7 +220,8 @@ class GeoShareApp {
                 this.socket.emit('update-location', this.roomId, {
                     userId: this.userId,
                     orientation: compassHeading,
-                    ...this.currentLocation
+                    latitude: this.currentLocation?.latitude,
+                    longitude: this.currentLocation?.longitude
                 });
             }
         });
@@ -248,44 +267,63 @@ class GeoShareApp {
         }
     }
 
-    updateCompasses() {
+    updateCompasses(currentOrientation = 0) {
         const compassContainer = document.getElementById('compass-container');
         compassContainer.innerHTML = ''; // Clear existing compasses
     
-        // Create main compass
+        // Create main compass for current user
         const mainCompass = document.createElement('div');
-        mainCompass.id = 'compass';
-        mainCompass.innerHTML = '<div id="needle"></div>';
+        mainCompass.className = 'compass';
+        mainCompass.innerHTML = `
+            <div class="needle" id="main-needle"></div>
+            <div class="compass-label">Your Compass</div>
+            <div class="compass-target">Pointing to: Singapore</div>
+        `;
         compassContainer.appendChild(mainCompass);
     
-        if (this.otherUsers.size > 0) {
-            // Point to other users
-            this.otherUsers.forEach((userData, userId) => {
-                const bearing = this.calculateBearing(
+        if (this.currentLocation) {
+            let targetBearing;
+            
+            if (this.otherUsers.size > 0) {
+                // Create a compass for each other user
+                this.otherUsers.forEach((userData, userId) => {
+                    targetBearing = this.calculateBearing(
+                        this.currentLocation.latitude,
+                        this.currentLocation.longitude,
+                        userData.latitude,
+                        userData.longitude
+                    );
+                    
+                    const userCompass = document.createElement('div');
+                    userCompass.className = 'compass';
+                    
+                    // Adjust bearing relative to device orientation
+                    const adjustedBearing = (targetBearing - currentOrientation + 360) % 360;
+                    
+                    userCompass.innerHTML = `
+                        <div class="needle" style="transform: translateX(-50%) rotate(${adjustedBearing}deg)"></div>
+                        <div class="compass-label">Points to User ${userId.substring(0, 4)}</div>
+                        <div class="compass-target">Bearing: ${Math.round(targetBearing)}°</div>
+                    `;
+                    compassContainer.appendChild(userCompass);
+                });
+            } else {
+                // Point to Singapore
+                targetBearing = this.calculateBearing(
                     this.currentLocation.latitude,
                     this.currentLocation.longitude,
-                    userData.latitude,
-                    userData.longitude
+                    this.singaporeCoords.latitude,
+                    this.singaporeCoords.longitude
                 );
                 
-                const compass = document.createElement('div');
-                compass.className = 'compass';
-                compass.innerHTML = `
-                    <div class="needle" style="transform: translateX(-50%) rotate(${bearing}deg)"></div>
-                    <div class="compass-label">Points to User ${userId.substring(0, 4)}</div>
-                `;
-                compassContainer.appendChild(compass);
-            });
-        } else if (this.currentLocation) {
-            // Point to Singapore if no other users
-            const bearing = this.calculateBearing(
-                this.currentLocation.latitude,
-                this.currentLocation.longitude,
-                this.singaporeCoords.latitude,
-                this.singaporeCoords.longitude
-            );
-            const needle = mainCompass.querySelector('#needle');
-            needle.style.transform = `translateX(-50%) rotate(${bearing}deg)`;
+                // Adjust bearing relative to device orientation
+                const adjustedBearing = (targetBearing - currentOrientation + 360) % 360;
+                
+                const needle = mainCompass.querySelector('#main-needle');
+                needle.style.transform = `translateX(-50%) rotate(${adjustedBearing}deg)`;
+                mainCompass.querySelector('.compass-target').textContent = 
+                    `Pointing to: Singapore (${Math.round(targetBearing)}°)`;
+            }
         }
     }
 
