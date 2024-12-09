@@ -189,42 +189,49 @@ class GeoShareApp {
     }
 
     setupOrientationTracking() {
+        const handleOrientation = (event) => {
+            // Get compass heading (alpha) in degrees
+            let heading = event.webkitCompassHeading || event.alpha;
+            
+            // Convert WebKit heading to standard orientation
+            if (event.webkitCompassHeading) {
+                // WebKit compass heading is already in degrees clockwise from North
+                heading = event.webkitCompassHeading;
+            } else if (event.alpha) {
+                // Alpha is in degrees counter-clockwise from West
+                // Convert to clockwise from North
+                heading = (360 - event.alpha + 270) % 360;
+            }
+
+            // Update compasses with the new heading
+            if (heading !== null && heading !== undefined) {
+                this.updateCompasses(heading);
+            }
+
+            // Broadcast orientation if in a room
+            if (this.roomId && this.currentLocation) {
+                this.socket.emit('update-location', this.roomId, {
+                    userId: this.userId,
+                    orientation: heading,
+                    latitude: this.currentLocation.latitude,
+                    longitude: this.currentLocation.longitude
+                });
+            }
+        };
+
         // Request permission for iOS devices
         if (typeof DeviceOrientationEvent.requestPermission === 'function') {
             DeviceOrientationEvent.requestPermission()
                 .then(response => {
                     if (response === 'granted') {
-                        window.addEventListener('deviceorientation', handleOrientation);
+                        window.addEventListener('deviceorientation', handleOrientation, true);
                     }
                 })
                 .catch(console.error);
         } else {
             // Add listener directly for non-iOS devices
-            window.addEventListener('deviceorientation', handleOrientation);
+            window.addEventListener('deviceorientation', handleOrientation, true);
         }
-    }
-    
-    addOrientationListener() {
-        window.addEventListener('deviceorientation', (event) => {
-            // Get device orientation
-            const compassHeading = event.alpha || 0;
-            console.log('Device orientation:', compassHeading); // Debug logging
-    
-            // Update compass display with new orientation
-            if (this.currentLocation) {
-                this.updateCompasses(compassHeading);
-            }
-    
-            // Broadcast orientation if in a room
-            if (this.roomId) {
-                this.socket.emit('update-location', this.roomId, {
-                    userId: this.userId,
-                    orientation: compassHeading,
-                    latitude: this.currentLocation?.latitude,
-                    longitude: this.currentLocation?.longitude
-                });
-            }
-        });
     }
 
     updateRoomUsers(users) {
