@@ -22,14 +22,79 @@ function generateRoomId() {
 }
 
 io.on('connection', (socket) => {
+  console.log('New client connected:', socket.id);
+
   // Create a new room
   socket.on('create-room', () => {
     const roomId = generateRoomId();
+    console.log('Room created:', roomId);
     socket.emit('room-created', roomId);
   });
 
-  // Rest of your existing socket logic remains the same
-  // ... (keep the rest of the socket event handlers)
+  // Join room
+  socket.on('join-room', (roomId, userData) => {
+    console.log('Attempting to join room:', roomId);
+    console.log('User data:', userData);
+
+    // Validate room ID
+    if (!roomId) {
+      console.log('Invalid room ID');
+      socket.emit('room-join-error', 'Invalid room ID');
+      return;
+    }
+
+    // Join the socket room
+    socket.join(roomId);
+    
+    // Initialize room if it doesn't exist
+    if (!rooms[roomId]) {
+      rooms[roomId] = [];
+    }
+    
+    // Add or update user in room
+    const existingUserIndex = rooms[roomId].findIndex(
+      user => user.userId === userData.userId
+    );
+    
+    if (existingUserIndex > -1) {
+      rooms[roomId][existingUserIndex] = userData;
+    } else {
+      rooms[roomId].push(userData);
+    }
+    
+    // Broadcast room update to all users in the room
+    console.log('Room users after join:', rooms[roomId]);
+    io.to(roomId).emit('room-update', rooms[roomId]);
+    
+    // Confirm successful join to the client
+    socket.emit('room-joined', roomId);
+  });
+
+  // Update location
+  socket.on('update-location', (roomId, locationData) => {
+    console.log('Location update for room:', roomId);
+    console.log('Location data:', locationData);
+
+    if (rooms[roomId]) {
+      const userIndex = rooms[roomId].findIndex(
+        user => user.userId === locationData.userId
+      );
+      
+      if (userIndex > -1) {
+        rooms[roomId][userIndex] = {
+          ...rooms[roomId][userIndex],
+          ...locationData
+        };
+        
+        // Broadcast to other users in the room
+        socket.to(roomId).emit('location-updated', locationData);
+      }
+    }
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id);
+  });
 });
 
 const PORT = process.env.PORT || 4000;
