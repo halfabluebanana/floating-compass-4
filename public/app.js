@@ -1,7 +1,7 @@
 class GeoShareApp {
     constructor() {
         this.socket = io('http://localhost:4000');
-        this.userId = this.generateUserId();
+        // this.userId = this.generateUserId();
         this.roomId = null;
         this.currentLocation = null;
 
