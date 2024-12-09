@@ -1,7 +1,15 @@
 class GeoShareApp {
     constructor() {
-        this.socket = io('http://localhost:4000');
-        // this.userId = this.generateUserId();
+        this.socket = io(window.location.origin);
+        // Add connection status logging
+        this.socket.on('connect', () => {
+            console.log('Socket connected successfully');
+        });
+
+        this.socket.on('connect_error', (error) => {
+            console.error('Socket connection error:', error);
+        });
+        this.userId = this.generateUserId();
         this.roomId = null;
         this.currentLocation = null;
 
@@ -23,11 +31,11 @@ class GeoShareApp {
     initEventListeners() {
         this.createRoomBtn.addEventListener('click', () => this.createRoom());
         this.joinRoomBtn.addEventListener('click', () => this.joinRoom());
-    
-       this.socket.on('room-created', (roomId) => {
+
+        this.socket.on('room-created', (roomId) => {
             this.roomId = roomId;
             console.log('Room created:', roomId);  // Debug log
-            
+
             // Make the room ID more visible
             this.roomLinkDisplay.innerHTML = `
                 <div style="margin-bottom: 10px">
@@ -37,14 +45,14 @@ class GeoShareApp {
                     Room Code: <strong>${roomId}</strong>
                 </div>
             `;
-            
+
             // Set the room input value
             this.roomInput.value = roomId;
-            
+
             // Alert on mobile to ensure visibility
             alert(`Room created! Your room code is: ${roomId}`);
         });
-    
+
         // Add these new event listeners
         // Room join success event
         this.socket.on('room-joined', (roomId) => {
@@ -54,7 +62,7 @@ class GeoShareApp {
                 <strong>Joined Room:</strong> ${roomId}
             `;
         });
-    
+
         // Room join error event
         this.socket.on('room-join-error', (errorMessage) => {
             console.error('Room join error:', errorMessage);
@@ -63,13 +71,13 @@ class GeoShareApp {
                 <strong>Error:</strong> ${errorMessage}
             `;
         });
-    
+
         // Room update event
         this.socket.on('room-update', (users) => {
             console.log('Room users updated:', users);
             this.updateRoomUsers(users);
         });
-    
+
         // Check for room in URL on page load
         this.checkUrlForRoom();
     }
@@ -77,7 +85,7 @@ class GeoShareApp {
     checkUrlForRoom() {
         const urlParams = new URLSearchParams(window.location.search);
         const roomFromUrl = urlParams.get('room');
-        
+
         if (roomFromUrl) {
             this.roomInput.value = roomFromUrl;
             this.joinRoom();
@@ -89,38 +97,38 @@ class GeoShareApp {
     }
 
     // Update your joinRoom method
-joinRoom() {
-    const roomId = this.roomInput.value.trim();
-    
-    if (!roomId) {
-        alert('Please enter a room ID');
-        return;
+    joinRoom() {
+        const roomId = this.roomInput.value.trim();
+
+        if (!roomId) {
+            alert('Please enter a room ID');
+            return;
+        }
+
+        console.log('Attempting to join room:', roomId);
+        this.roomId = roomId;
+
+        const userData = {
+            userId: this.userId || Math.random().toString(36).substring(2, 10), // Fallback user ID
+            latitude: this.currentLocation?.latitude || null,
+            longitude: this.currentLocation?.longitude || null
+        };
+
+        console.log('Joining with user data:', userData); // Debug log
+
+        // Send join room event with current location
+        this.socket.emit('join-room', roomId, userData);
     }
-
-    console.log('Attempting to join room:', roomId);
-    this.roomId = roomId;
-
-    const userData = {
-        userId: this.userId || Math.random().toString(36).substring(2, 10), // Fallback user ID
-        latitude: this.currentLocation?.latitude || null,
-        longitude: this.currentLocation?.longitude || null
-    };
-
-    console.log('Joining with user data:', userData); // Debug log
-
-     // Send join room event with current location
-    this.socket.emit('join-room', roomId, userData);
-}
 
     setupLocationTracking() {
         if ('geolocation' in navigator) {
             navigator.geolocation.watchPosition((position) => {
                 const { latitude, longitude } = position.coords;
-                
+
                 // Update location display
                 this.latitudeElement.textContent = `Latitude: ${latitude.toFixed(4)}`;
                 this.longitudeElement.textContent = `Longitude: ${longitude.toFixed(4)}`;
-                
+
                 this.currentLocation = { latitude, longitude };
 
                 // Broadcast location if in a room
@@ -144,7 +152,7 @@ joinRoom() {
     setupOrientationTracking() {
         window.addEventListener('deviceorientation', (event) => {
             const compassHeading = event.alpha || 0;
-            
+
             // Rotate compass needle
             this.needle.style.transform = `translateX(-50%) rotate(${compassHeading}deg)`;
 
@@ -163,16 +171,16 @@ joinRoom() {
             console.log('No users data received');
             return;
         }
-    
+
         this.roomUsersElement.innerHTML = '<h3>Room Users</h3>';
-        
+
         users.forEach(user => {
             const userDiv = document.createElement('div');
             // Add null checks and default values
             const userId = user?.userId || 'Unknown';
             const lat = user?.latitude ? user.latitude.toFixed(4) : 'N/A';
             const lon = user?.longitude ? user.longitude.toFixed(4) : 'N/A';
-            
+
             userDiv.textContent = `User: ${userId.substring(0, 8)}, Lat: ${lat}, Lon: ${lon}`;
             this.roomUsersElement.appendChild(userDiv);
         });
