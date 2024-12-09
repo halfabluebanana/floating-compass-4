@@ -140,13 +140,13 @@ class GeoShareApp {
         // Send join room event with current location
         this.socket.emit('join-room', roomId, userData);
     }
-    
+
     findSimilarLocations(latitude, longitude, threshold = 5) {
         const similar = {
             latitude: [],
             longitude: []
         };
-    
+
         this.referenceLocations.forEach(location => {
             if (Math.abs(location.latitude - latitude) <= threshold) {
                 similar.latitude.push(location);
@@ -155,7 +155,7 @@ class GeoShareApp {
                 similar.longitude.push(location);
             }
         });
-    
+
         return similar;
     }
 
@@ -192,7 +192,7 @@ class GeoShareApp {
         const handleOrientation = (event) => {
             // Get compass heading (alpha) in degrees
             let heading = event.webkitCompassHeading || event.alpha;
-            
+
             // Convert WebKit heading to standard orientation
             if (event.webkitCompassHeading) {
                 // WebKit compass heading is already in degrees clockwise from North
@@ -244,15 +244,15 @@ class GeoShareApp {
 
         this.roomUsersElement.innerHTML = '<h3>Room Users</h3>';
 
-        users.forEach(user => { 
+        users.forEach(user => {
             if (user.userId !== this.userId) {
-            this.otherUsers.set(user.userId, {
-                latitude: user.latitude,
-                longitude: user.longitude,
-                orientation: user.orientation
-            });
-        }
-            
+                this.otherUsers.set(user.userId, {
+                    latitude: user.latitude,
+                    longitude: user.longitude,
+                    orientation: user.orientation
+                });
+            }
+
             const userDiv = document.createElement('div');
             // Add null checks and default values
             const userId = user?.userId || 'Unknown';
@@ -265,7 +265,7 @@ class GeoShareApp {
 
         this.updateCompasses();
 
-        if (this.currentLocation){
+        if (this.currentLocation) {
             const similar = this.findSimilarLocations(
                 this.currentLocation.latitude,
                 this.currentLocation.longitude
@@ -276,60 +276,62 @@ class GeoShareApp {
 
     updateCompasses(currentOrientation = 0) {
         const compassContainer = document.getElementById('compass-container');
-        compassContainer.innerHTML = ''; // Clear existing compasses
+        compassContainer.innerHTML = '';
     
-        // Create main compass for current user
+        // Create main compass
         const mainCompass = document.createElement('div');
         mainCompass.className = 'compass';
         mainCompass.innerHTML = `
-            <div class="needle" id="main-needle"></div>
+            <div class="needle" id="main-needle" style="transform: rotate(${-currentOrientation}deg)"></div>
             <div class="compass-label">Your Compass</div>
-            <div class="compass-target">Pointing to: Singapore</div>
+            <div class="compass-target">Pointing to: North</div>
         `;
         compassContainer.appendChild(mainCompass);
     
         if (this.currentLocation) {
-            let targetBearing;
-            
             if (this.otherUsers.size > 0) {
-                // Create a compass for each other user
                 this.otherUsers.forEach((userData, userId) => {
-                    targetBearing = this.calculateBearing(
-                        this.currentLocation.latitude,
-                        this.currentLocation.longitude,
-                        userData.latitude,
-                        userData.longitude
-                    );
-                    
-                    const userCompass = document.createElement('div');
-                    userCompass.className = 'compass';
-                    
-                    // Adjust bearing relative to device orientation
-                    const adjustedBearing = (targetBearing - currentOrientation + 360) % 360;
-                    
-                    userCompass.innerHTML = `
-                        <div class="needle" style="transform: translateX(-50%) rotate(${adjustedBearing}deg)"></div>
-                        <div class="compass-label">Points to User ${userId.substring(0, 4)}</div>
-                        <div class="compass-target">Bearing: ${Math.round(targetBearing)}°</div>
-                    `;
-                    compassContainer.appendChild(userCompass);
+                    if (userData.latitude && userData.longitude) {
+                        const targetBearing = this.calculateBearing(
+                            this.currentLocation.latitude,
+                            this.currentLocation.longitude,
+                            userData.latitude,
+                            userData.longitude
+                        );
+                        
+                        const userCompass = document.createElement('div');
+                        userCompass.className = 'compass';
+                        
+                        // Calculate relative bearing based on current orientation
+                        const relativeBearing = (targetBearing - currentOrientation + 360) % 360;
+                        
+                        userCompass.innerHTML = `
+                            <div class="needle" style="transform: rotate(${relativeBearing}deg)"></div>
+                            <div class="compass-label">Points to User ${userId.substring(0, 4)}</div>
+                            <div class="compass-target">Bearing: ${Math.round(targetBearing)}°</div>
+                        `;
+                        compassContainer.appendChild(userCompass);
+                    }
                 });
             } else {
                 // Point to Singapore
-                targetBearing = this.calculateBearing(
+                const targetBearing = this.calculateBearing(
                     this.currentLocation.latitude,
                     this.currentLocation.longitude,
                     this.singaporeCoords.latitude,
                     this.singaporeCoords.longitude
                 );
                 
-                // Adjust bearing relative to device orientation
-                const adjustedBearing = (targetBearing - currentOrientation + 360) % 360;
+                const relativeBearing = (targetBearing - currentOrientation + 360) % 360;
                 
-                const needle = mainCompass.querySelector('#main-needle');
-                needle.style.transform = `translateX(-50%) rotate(${adjustedBearing}deg)`;
-                mainCompass.querySelector('.compass-target').textContent = 
-                    `Pointing to: Singapore (${Math.round(targetBearing)}°)`;
+                const userCompass = document.createElement('div');
+                userCompass.className = 'compass';
+                userCompass.innerHTML = `
+                    <div class="needle" style="transform: rotate(${relativeBearing}deg)"></div>
+                    <div class="compass-label">Points to Singapore</div>
+                    <div class="compass-target">Bearing: ${Math.round(targetBearing)}°</div>
+                `;
+                compassContainer.appendChild(userCompass);
             }
         }
     }
@@ -340,25 +342,25 @@ class GeoShareApp {
         startLng = startLng * Math.PI / 180;
         endLat = endLat * Math.PI / 180;
         endLng = endLng * Math.PI / 180;
-    
+
         const y = Math.sin(endLng - startLng) * Math.cos(endLat);
         const x = Math.cos(startLat) * Math.sin(endLat) -
-                 Math.sin(startLat) * Math.cos(endLat) * Math.cos(endLng - startLng);
+            Math.sin(startLat) * Math.cos(endLat) * Math.cos(endLng - startLng);
         let bearing = Math.atan2(y, x);
         bearing = bearing * 180 / Math.PI;
         return (bearing + 360) % 360;
     }
-    
+
     displaySimilarLocations(similar) {
         const container = document.createElement('div');
         container.className = 'similar-locations';
         container.innerHTML = `
             <h4>Locations with Similar Coordinates:</h4>
-            ${similar.latitude.length > 0 ? 
-                `<p>Similar Latitude: ${similar.latitude.map(l => l.name).join(', ')}</p>` : 
+            ${similar.latitude.length > 0 ?
+                `<p>Similar Latitude: ${similar.latitude.map(l => l.name).join(', ')}</p>` :
                 ''}
-            ${similar.longitude.length > 0 ? 
-                `<p>Similar Longitude: ${similar.longitude.map(l => l.name).join(', ')}</p>` : 
+            ${similar.longitude.length > 0 ?
+                `<p>Similar Longitude: ${similar.longitude.map(l => l.name).join(', ')}</p>` :
                 ''}
         `;
         this.roomUsersElement.appendChild(container);
