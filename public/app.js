@@ -192,15 +192,15 @@ class GeoShareApp {
         // Request permission for iOS devices
         if (typeof DeviceOrientationEvent.requestPermission === 'function') {
             DeviceOrientationEvent.requestPermission()
-                .then(permissionState => {
-                    if (permissionState === 'granted') {
-                        this.addOrientationListener();
+                .then(response => {
+                    if (response === 'granted') {
+                        window.addEventListener('deviceorientation', handleOrientation);
                     }
                 })
                 .catch(console.error);
         } else {
             // Add listener directly for non-iOS devices
-            this.addOrientationListener();
+            window.addEventListener('deviceorientation', handleOrientation);
         }
     }
     
