@@ -24,16 +24,25 @@ class GeoShareApp {
         this.createRoomBtn.addEventListener('click', () => this.createRoom());
         this.joinRoomBtn.addEventListener('click', () => this.joinRoom());
     
-        // Room creation event (you already have this)
-        this.socket.on('room-created', (roomId) => {
+       this.socket.on('room-created', (roomId) => {
             this.roomId = roomId;
-            const shareLink = `${window.location.origin}?room=${roomId}`;
+            console.log('Room created:', roomId);  // Debug log
+            
+            // Make the room ID more visible
             this.roomLinkDisplay.innerHTML = `
-                <strong>Room Created!</strong><br>
-                Share this link: <a href="${shareLink}">${shareLink}</a>
+                <div style="margin-bottom: 10px">
+                    <strong>Room Created!</strong>
+                </div>
+                <div style="margin-bottom: 10px">
+                    Room Code: <strong>${roomId}</strong>
+                </div>
             `;
+            
+            // Set the room input value
             this.roomInput.value = roomId;
-            console.log('Room created:', roomId);
+            
+            // Alert on mobile to ensure visibility
+            alert(`Room created! Your room code is: ${roomId}`);
         });
     
         // Add these new event listeners
@@ -91,12 +100,16 @@ joinRoom() {
     console.log('Attempting to join room:', roomId);
     this.roomId = roomId;
 
-    // Send join room event with current location
-    this.socket.emit('join-room', roomId, {
-        userId: this.userId,
-        latitude: this.currentLocation?.latitude,
-        longitude: this.currentLocation?.longitude
-    });
+    const userData = {
+        userId: this.userId || Math.random().toString(36).substring(2, 10), // Fallback user ID
+        latitude: this.currentLocation?.latitude || null,
+        longitude: this.currentLocation?.longitude || null
+    };
+
+    console.log('Joining with user data:', userData); // Debug log
+
+     // Send join room event with current location
+    this.socket.emit('join-room', roomId, userData);
 }
 
     setupLocationTracking() {
@@ -146,11 +159,21 @@ joinRoom() {
     }
 
     updateRoomUsers(users) {
+        if (!users) {
+            console.log('No users data received');
+            return;
+        }
+    
         this.roomUsersElement.innerHTML = '<h3>Room Users</h3>';
         
         users.forEach(user => {
             const userDiv = document.createElement('div');
-            userDiv.textContent = `User: ${user.userId.substring(0, 8)}, Lat: ${user.latitude?.toFixed(4) || 'N/A'}, Lon: ${user.longitude?.toFixed(4) || 'N/A'}`;
+            // Add null checks and default values
+            const userId = user?.userId || 'Unknown';
+            const lat = user?.latitude ? user.latitude.toFixed(4) : 'N/A';
+            const lon = user?.longitude ? user.longitude.toFixed(4) : 'N/A';
+            
+            userDiv.textContent = `User: ${userId.substring(0, 8)}, Lat: ${lat}, Lon: ${lon}`;
             this.roomUsersElement.appendChild(userDiv);
         });
     }
