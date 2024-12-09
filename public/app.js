@@ -27,7 +27,7 @@ class GeoShareApp {
     initEventListeners() {
         this.createRoomBtn.addEventListener('click', () => this.createRoom());
         this.joinRoomBtn.addEventListener('click', () => this.joinRoom());
-
+    
         this.socket.on('room-created', (roomId) => {
             this.roomId = roomId;
             const shareLink = `${window.location.origin}?room=${roomId}`;
@@ -35,14 +35,10 @@ class GeoShareApp {
                 <strong>Room Created!</strong><br>
                 Share this link: <a href="${shareLink}">${shareLink}</a>
             `;
+            // Set the room input to the new room ID
+            this.roomInput.value = roomId;
         });
-
-        this.socket.on('room-update', (users) => {
-            this.updateRoomUsers(users);
-        });
-
-        // Check for room in URL on page load
-        this.checkUrlForRoom();
+    
     }
 
     checkUrlForRoom() {
