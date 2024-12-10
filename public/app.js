@@ -60,7 +60,7 @@ class GeoShareApp {
                 alert("Permission not granted. Compass features will not work.");
             }
         });
-    
+
         this.socket.on('room-created', (roomId) => {
             this.roomId = roomId;
             console.log('Room created:', roomId);  // Debug log
@@ -195,7 +195,7 @@ class GeoShareApp {
             alert('Geolocation is not supported by your browser');
         }
     }
-    
+
     async requestDeviceOrientation() {
         if (typeof DeviceOrientationEvent.requestPermission === 'function') {
             try {
@@ -215,25 +215,24 @@ class GeoShareApp {
             return true;
         }
     }
-    
+
     addOrientationListener() {
         window.addEventListener('deviceorientation', this.handleOrientation.bind(this));
         window.addEventListener('deviceorientationabsolute', this.handleOrientation.bind(this));
     }
-    
+
     handleOrientation(event) {
         let heading;
         if (event.webkitCompassHeading) {
             heading = event.webkitCompassHeading;
-            console.log('iOS heading:', heading);
         } else if (event.alpha) {
             heading = (360 - event.alpha) % 360;
-            console.log('Android heading:', heading);
         }
     
         if (heading !== null && heading !== undefined && !isNaN(heading)) {
+            this.heading = heading; // Store heading
             this.updateCompass(heading);
-            
+
             if (this.roomId && this.currentLocation) {
                 this.socket.emit('update-location', this.roomId, {
                     userId: this.userId,
@@ -246,35 +245,38 @@ class GeoShareApp {
     }
 
     updateRoomUsers(users) {
-        if (!users) {
-            console.log('No users data received');
-            return;
-        }
-        // Clear previous users
+    
         this.otherUsers.clear();
-
         this.roomUsersElement.innerHTML = '<h3>Room Users</h3>';
+        const compassContainer = document.getElementById('compass-container');
+        compassContainer.innerHTML = '';
+
+        // Add main compass
+        const mainCompass = this.createCompass('Your Compass', this.heading);
+        compassContainer.appendChild(mainCompass);
 
         users.forEach(user => {
+            // Display user info
+            const userDiv = document.createElement('div');
+            const userId = user?.userId || 'Unknown';
+            const lat = user?.latitude ? user.latitude.toFixed(4) : 'N/A';
+            const lon = user?.longitude ? user.longitude.toFixed(4) : 'N/A';
+            userDiv.textContent = `User: ${userId.substring(0, 8)}, Lat: ${lat}, Lon: ${lon}`;
+            this.roomUsersElement.appendChild(userDiv);
+
+
             if (user.userId !== this.userId) {
                 this.otherUsers.set(user.userId, {
                     latitude: user.latitude,
                     longitude: user.longitude,
                     orientation: user.orientation
                 });
+                const userCompass = this.createCompass(`User ${userId.substring(0, 4)}`, user.orientation || 0);
+                compassContainer.appendChild(userCompass);
+
             }
 
-            const userDiv = document.createElement('div');
-            // Add null checks and default values
-            const userId = user?.userId || 'Unknown';
-            const lat = user?.latitude ? user.latitude.toFixed(4) : 'N/A';
-            const lon = user?.longitude ? user.longitude.toFixed(4) : 'N/A';
-
-            userDiv.textContent = `User: ${userId.substring(0, 8)}, Lat: ${lat}, Lon: ${lon}`;
-            this.roomUsersElement.appendChild(userDiv);
         });
-
-        this.updateCompasses();
 
         if (this.currentLocation) {
             const similar = this.findSimilarLocations(
@@ -283,6 +285,16 @@ class GeoShareApp {
             );
             this.displaySimilarLocations(similar);
         }
+    }
+    // Add helper method to create compass
+    createCompass(label, orientation) {
+        const compass = document.createElement('div');
+        compass.className = 'compass';
+        compass.innerHTML = `
+        <div class="compass-needle" style="transform: translateX(-50%) rotate(${orientation}deg)"></div>
+        <div class="compass-label">${label}</div>
+    `;
+        return compass;
     }
 
     updateCompass(currentOrientation) {
