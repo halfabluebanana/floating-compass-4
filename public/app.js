@@ -284,52 +284,44 @@ class GeoShareApp {
 
         this.otherUsers.clear();
         this.roomUsersElement.innerHTML = '<h3>Room Users</h3>';
-        const compassContainer = document.getElementById('compass-container');
-        compassContainer.innerHTML = '';
-
-        // Add main compass
-        const mainCompass = this.createCompass('Your Compass', this.heading);
-        compassContainer.appendChild(mainCompass);
-
         users.forEach(user => {
-            // Display user info
-            const userDiv = document.createElement('div');
-            const userId = user?.userId || 'Unknown';
-            const lat = user?.latitude ? user.latitude.toFixed(4) : 'N/A';
-            const lon = user?.longitude ? user.longitude.toFixed(4) : 'N/A';
-            userDiv.textContent = `User: ${userId.substring(0, 8)}, Lat: ${lat}, Lon: ${lon}`;
-            this.roomUsersElement.appendChild(userDiv);
-
-            // Create map for each user
+            const userSection = document.createElement('div');
+            userSection.className = 'user-section';
+        
             if (user.latitude && user.longitude) {
                 const mapDiv = document.createElement('div');
                 mapDiv.className = 'user-map';
                 const latlon = `${user.latitude},${user.longitude}`;
-                const mapImage = `https://maps.googleapis.com/maps/api/staticmap?center=${latlon}&zoom=18&size=300x300&maptype=satellite&sensor=false&key=AIzaSyCuFG-NOikYAj9JOBS3oD_nhuSxlu_T8v4`;
-                mapDiv.innerHTML = `
-                <img src="${mapImage}" alt="Map">
-                <div class="user-label">${userId.substring(0, 4)}</div>
-            `;
-                grid.appendChild(mapDiv);
+                const mapImage = `https://maps.googleapis.com/maps/api/staticmap?center=${latlon}&zoom=18&size=1920x1080&maptype=satellite&sensor=false&key=AIzaSyCuFG-NOikYAj9JOBS3oD_nhuSxlu_T8v4`;
+                mapDiv.innerHTML = `<img src="${mapImage}" alt="Map">`;
+                userSection.appendChild(mapDiv);
             }
-
-
+        
             if (user.userId !== this.userId) {
                 this.otherUsers.set(user.userId, {
                     latitude: user.latitude,
                     longitude: user.longitude,
                     orientation: user.orientation
                 });
-                const userCompass = this.createCompass(`User ${userId.substring(0, 4)}`, user.orientation || 0);
-                compassContainer.appendChild(userCompass);
-
             }
+    
+            const compass = user.userId === this.userId ? 
+                this.createCompass('Your Compass', this.heading) :
+                this.createCompass(`User ${user.userId.substring(0, 4)}`, user.orientation || 0);
+            userSection.appendChild(compass);
+            
+            grid.appendChild(userSection);
+            });
 
             mapContainer.appendChild(grid);
-
-        });
-
-
+            if (this.currentLocation) {
+                const similar = this.findSimilarLocations(
+                    this.currentLocation.latitude,
+                    this.currentLocation.longitude
+                );
+                this.displaySimilarLocations(similar);
+            }
+        }
 
         if (this.currentLocation) {
             const similar = this.findSimilarLocations(
