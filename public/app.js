@@ -43,6 +43,7 @@ class GeoShareApp {
         this.initEventListeners();
         this.setupLocationTracking();
         this.setupOrientationTracking();
+        this.heading = 0;
     }
 
     generateUserId() {
@@ -53,6 +54,13 @@ class GeoShareApp {
         this.createRoomBtn.addEventListener('click', () => this.createRoom());
         this.joinRoomBtn.addEventListener('click', () => this.joinRoom());
 
+        document.getElementById('enable-permissions').addEventListener('click', async () => {
+            const permissionGranted = await this.requestDeviceOrientation();
+            if (!permissionGranted) {
+                alert("Permission not granted. Compass features will not work.");
+            }
+        });
+    
         this.socket.on('room-created', (roomId) => {
             this.roomId = roomId;
             console.log('Room created:', roomId);  // Debug log
@@ -187,28 +195,45 @@ class GeoShareApp {
             alert('Geolocation is not supported by your browser');
         }
     }
-
-    setupOrientationTracking() {
-        const handleOrientation = (event) => {
-            // Get device orientation
-            let heading;
+    
+    async requestDeviceOrientation() {
+        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+            try {
+                const permissionState = await DeviceOrientationEvent.requestPermission();
+                if (permissionState === 'granted') {
+                    this.addOrientationListener();
+                    return true;
+                }
+                console.warn('Device orientation permission denied');
+                return false;
+            } catch (error) {
+                console.error('Error requesting orientation permission:', error);
+                return false;
+            }
+        } else {
+            this.addOrientationListener();
+            return true;
+        }
+    }
+    
+    addOrientationListener() {
+        window.addEventListener('deviceorientation', this.handleOrientation.bind(this));
+        window.addEventListener('deviceorientationabsolute', this.handleOrientation.bind(this));
+    }
+    
+    handleOrientation(event) {
+        let heading;
+        if (event.webkitCompassHeading) {
+            heading = event.webkitCompassHeading;
+            console.log('iOS heading:', heading);
+        } else if (event.alpha) {
+            heading = (360 - event.alpha) % 360;
+            console.log('Android heading:', heading);
+        }
+    
+        if (heading !== null && heading !== undefined && !isNaN(heading)) {
+            this.updateCompass(heading);
             
-            if (event.webkitCompassHeading) {
-                // iOS devices
-                heading = event.webkitCompassHeading;
-                console.log('iOS heading:', heading);
-            } else if (event.alpha) {
-                // Android devices
-                heading = (360 - event.alpha) % 360;
-                console.log('Android heading:', heading);
-            }
-    
-            // Update compasses only if we have valid heading
-            if (heading !== null && heading !== undefined && !isNaN(heading)) {
-                this.updateCompasses(heading);
-            }
-    
-            // Broadcast orientation
             if (this.roomId && this.currentLocation) {
                 this.socket.emit('update-location', this.roomId, {
                     userId: this.userId,
@@ -217,24 +242,8 @@ class GeoShareApp {
                     longitude: this.currentLocation.longitude
                 });
             }
-        };
-    
-
-        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-        DeviceOrientationEvent.requestPermission()
-            .then(response => {
-                if (response === 'granted') {
-                    window.addEventListener('deviceorientationabsolute', handleOrientation, true);
-                    window.addEventListener('deviceorientation', handleOrientation, true);
-                }
-            })
-            .catch(console.error);
-    } else {
-        window.addEventListener('deviceorientationabsolute', handleOrientation, true);
-        window.addEventListener('deviceorientation', handleOrientation, true);
+        }
     }
-}
-
 
     updateRoomUsers(users) {
         if (!users) {
@@ -276,62 +285,11 @@ class GeoShareApp {
         }
     }
 
-    updateCompasses(currentOrientation = 0) {
-        const compassContainer = document.getElementById('compass-container');
-        compassContainer.innerHTML = '';
-    
-        // Main compass (always points North)
-        const mainCompass = document.createElement('div');
-        mainCompass.className = 'compass';
-        mainCompass.innerHTML = `
-            <div class="needle" id="main-needle" style="transform: translateX(-50%) rotate(${currentOrientation}deg)"></div>
-            <div class="compass-label">Your Compass</div>
-            <div class="compass-target">True North</div>
-        `;
-        compassContainer.appendChild(mainCompass);
-    
-        if (this.currentLocation) {
-            if (this.otherUsers.size > 0) {
-                this.otherUsers.forEach((userData, userId) => {
-                    if (userData.latitude && userData.longitude) {
-                        const targetBearing = this.calculateBearing(
-                            this.currentLocation.latitude,
-                            this.currentLocation.longitude,
-                            userData.latitude,
-                            userData.longitude
-                        );
-                        
-                        const relativeAngle = (targetBearing - currentOrientation + 360) % 360;
-                        
-                        const userCompass = document.createElement('div');
-                        userCompass.className = 'compass';
-                        userCompass.innerHTML = `
-                            <div class="needle" style="transform: translateX(-50%) rotate(${relativeAngle}deg)"></div>
-                            <div class="compass-label">Points to User ${userId.substring(0, 4)}</div>
-                            <div class="compass-target">Bearing: ${Math.round(targetBearing)}°</div>
-                        `;
-                        compassContainer.appendChild(userCompass);
-                    }
-                });
-            } else {
-                const targetBearing = this.calculateBearing(
-                    this.currentLocation.latitude,
-                    this.currentLocation.longitude,
-                    this.singaporeCoords.latitude,
-                    this.singaporeCoords.longitude
-                );
-                
-                const relativeAngle = (targetBearing - currentOrientation + 360) % 360;
-                
-                const userCompass = document.createElement('div');
-                userCompass.className = 'compass';
-                userCompass.innerHTML = `
-                    <div class="needle" style="transform: translateX(-50%) rotate(${relativeAngle}deg)"></div>
-                    <div class="compass-label">Points to Singapore</div>
-                    <div class="compass-target">Bearing: ${Math.round(targetBearing)}°</div>
-                `;
-                compassContainer.appendChild(userCompass);
-            }
+    updateCompass(currentOrientation) {
+        const compassNeedle = document.querySelector('.compass-needle');
+        if (compassNeedle) {
+            compassNeedle.style.transform = `translateX(-50%) rotate(${currentOrientation}deg)`;
+            console.log('Current heading:', currentOrientation);
         }
     }
 

@@ -76,7 +76,7 @@ body {
     left: 50%;
     width: 4px;
     height: 60px;
-    background: linear-gradient(to bottom, red 50%, black 50%);
+    background: linear-gradient(to bottom, darkgrey 50%, black 50%);
     transform-origin: bottom center;
     transition: transform 0.1s ease;
 }
@@ -102,7 +102,7 @@ body {
 
 button {
     padding: 10px 15px;
-    background-color: #4CAF50;
+    background-color: peru;
     color: white;
     border: none;
     border-radius: 4px;
@@ -111,7 +111,7 @@ button {
 }
 
 button:hover {
-    background-color: #45a049;
+    background-color: peru 40%;
 }
 
 #room-users {
@@ -124,7 +124,7 @@ button:hover {
 #room-link-display {
     margin: 15px 0;
     padding: 10px;
-    background: #f0f0f0;
+    background: #d3d3d3;
     border-radius: 4px;
     word-break: break-all;
 }
