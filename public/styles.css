@@ -44,6 +44,7 @@ body {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    opacity: 80%;
 }
 
 #compass-container {
@@ -83,7 +84,7 @@ body {
     width: 150px;
     height: 150px;
     position: relative;
-    border: 2px solid #333;
+    border: 2px solid linen;
     border-radius: 50%;
     margin: 20px auto;
 }
@@ -92,9 +93,9 @@ body {
     position: absolute;
     left: 50%;
     top: 0;
-    width: 4px;
+    width: 2px;
     height: 50%;
-    background: red;
+    background: linen;
     transform-origin: bottom center;
 }
 
