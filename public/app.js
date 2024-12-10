@@ -38,8 +38,12 @@ class GeoShareApp {
         this.roomUsersElement = document.getElementById('room-users');
         this.latitudeElement = document.getElementById('latitude');
         this.longitudeElement = document.getElementById('longitude');
+    
         this.needle = document.getElementById('needle');
 
+        if (typeof DeviceOrientationEvent.requestPermission !== 'function') {
+            this.requestDeviceOrientation();
+        }
         this.initEventListeners();
         this.setupLocationTracking();
         this.heading = 0;
@@ -118,6 +122,7 @@ class GeoShareApp {
         this.checkUrlForRoom();
     }
 
+
     checkUrlForRoom() {
         const urlParams = new URLSearchParams(window.location.search);
         const roomFromUrl = urlParams.get('room');
@@ -188,13 +193,6 @@ class GeoShareApp {
 
                 this.currentLocation = { latitude, longitude };
                 this.displayUserMap(); // Add this line
-                if (this.roomId) {
-                    this.socket.emit('update-location', this.roomId, {
-                        userId: this.userId,
-                        latitude,
-                        longitude
-                    });
-                }
 
                 // Broadcast location if in a room
                 if (this.roomId) {
@@ -281,7 +279,7 @@ class GeoShareApp {
 
         const mapContainer = document.getElementById('map-container');
         const grid = document.createElement('div');
-        grid.className = 'map-grid';
+        grid.className = 'map-grid' + (users.length > 2 ? ' multi-user' : '');
         mapContainer.innerHTML = '';
 
         this.otherUsers.clear();
@@ -341,7 +339,6 @@ class GeoShareApp {
             this.displaySimilarLocations(similar);
         }
     }
-
 
     // Add helper method to create compass
     createCompass(label, orientation) {
