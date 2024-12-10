@@ -88,6 +88,8 @@ io.on('connection', (socket) => {
         
         // Broadcast to other users in the room
         socket.to(roomId).emit('location-updated', locationData);
+         // Broadcast updated location AND orientation to all users in room
+         io.to(roomId).emit('room-update', rooms[roomId]);
       }
     }
   });
