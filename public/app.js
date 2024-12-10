@@ -277,7 +277,7 @@ class GeoShareApp {
     updateCompasses(currentOrientation = 0) {
         const compassContainer = document.getElementById('compass-container');
         compassContainer.innerHTML = '';
-    
+
         // Create main compass
         const mainCompass = document.createElement('div');
         mainCompass.className = 'compass';
@@ -287,7 +287,7 @@ class GeoShareApp {
             <div class="compass-target">Pointing to: North</div>
         `;
         compassContainer.appendChild(mainCompass);
-    
+
         if (this.currentLocation) {
             if (this.otherUsers.size > 0) {
                 this.otherUsers.forEach((userData, userId) => {
@@ -298,15 +298,15 @@ class GeoShareApp {
                             userData.latitude,
                             userData.longitude
                         );
-                        
+
                         const userCompass = document.createElement('div');
                         userCompass.className = 'compass';
-                        
+
                         // Calculate relative bearing based on current orientation
                         const relativeBearing = (targetBearing + currentOrientation + 360) % 360;
-                        
+
                         userCompass.innerHTML = `
-                            <div class="needle" style="transform: rotate(${relativeBearing}deg)"></div>
+                            <div class="needle" style="transform: translateX(-50%) rotate(${relativeBearing}deg)"></div>
                             <div class="compass-label">Points to User ${userId.substring(0, 4)}</div>
                             <div class="compass-target">Bearing: ${Math.round(targetBearing)}°</div>
                         `;
@@ -321,9 +321,9 @@ class GeoShareApp {
                     this.singaporeCoords.latitude,
                     this.singaporeCoords.longitude
                 );
-                
+
                 const relativeBearing = (targetBearing - currentOrientation + 360) % 360;
-                
+
                 const userCompass = document.createElement('div');
                 userCompass.className = 'compass';
                 userCompass.innerHTML = `
