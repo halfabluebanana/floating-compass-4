@@ -175,6 +175,9 @@ class GeoShareApp {
     }
 
     setupLocationTracking() {
+
+
+
         if ('geolocation' in navigator) {
             navigator.geolocation.watchPosition((position) => {
                 const { latitude, longitude } = position.coords;
@@ -184,6 +187,14 @@ class GeoShareApp {
                 this.longitudeElement.textContent = `Longitude: ${longitude.toFixed(4)}`;
 
                 this.currentLocation = { latitude, longitude };
+                this.displayUserMap(); // Add this line
+                if (this.roomId) {
+                    this.socket.emit('update-location', this.roomId, {
+                        userId: this.userId,
+                        latitude,
+                        longitude
+                    });
+                }
 
                 // Broadcast location if in a room
                 if (this.roomId) {
@@ -201,7 +212,10 @@ class GeoShareApp {
         } else {
             alert('Geolocation is not supported by your browser');
         }
+
+
     }
+
 
     async requestDeviceOrientation() {
         if (typeof DeviceOrientationEvent.requestPermission === 'function') {
@@ -220,6 +234,18 @@ class GeoShareApp {
         } else {
             this.addOrientationListener();
             return true;
+        }
+    }
+
+    async displayUserMap() {
+        try {
+            if (this.currentLocation) {
+                const latlon = `${this.currentLocation.latitude},${this.currentLocation.longitude}`;
+                const mapImage = `https://maps.googleapis.com/maps/api/staticmap?center=${latlon}&zoom=18&size=1920x1080&maptype=satellite&sensor=false&key=AIzaSyCuFG-NOikYAj9JOBS3oD_nhuSxlu_T8v4`;
+                document.getElementById("mapholder").innerHTML = `<img src="${mapImage}" alt="Map">`;
+            }
+        } catch (error) {
+            console.error("Error displaying map:", error);
         }
     }
 
@@ -253,6 +279,11 @@ class GeoShareApp {
 
     updateRoomUsers(users) {
 
+        const mapContainer = document.getElementById('map-container');
+        const grid = document.createElement('div');
+        grid.className = 'map-grid';
+        mapContainer.innerHTML = '';
+
         this.otherUsers.clear();
         this.roomUsersElement.innerHTML = '<h3>Room Users</h3>';
         const compassContainer = document.getElementById('compass-container');
@@ -271,6 +302,19 @@ class GeoShareApp {
             userDiv.textContent = `User: ${userId.substring(0, 8)}, Lat: ${lat}, Lon: ${lon}`;
             this.roomUsersElement.appendChild(userDiv);
 
+            // Create map for each user
+            if (user.latitude && user.longitude) {
+                const mapDiv = document.createElement('div');
+                mapDiv.className = 'user-map';
+                const latlon = `${user.latitude},${user.longitude}`;
+                const mapImage = `https://maps.googleapis.com/maps/api/staticmap?center=${latlon}&zoom=18&size=300x300&maptype=satellite&sensor=false&key=AIzaSyCuFG-NOikYAj9JOBS3oD_nhuSxlu_T8v4`;
+                mapDiv.innerHTML = `
+                <img src="${mapImage}" alt="Map">
+                <div class="user-label">${userId.substring(0, 4)}</div>
+            `;
+                grid.appendChild(mapDiv);
+            }
+
 
             if (user.userId !== this.userId) {
                 this.otherUsers.set(user.userId, {
@@ -283,7 +327,11 @@ class GeoShareApp {
 
             }
 
+            mapContainer.appendChild(grid);
+
         });
+
+
 
         if (this.currentLocation) {
             const similar = this.findSimilarLocations(
@@ -293,6 +341,8 @@ class GeoShareApp {
             this.displaySimilarLocations(similar);
         }
     }
+
+
     // Add helper method to create compass
     createCompass(label, orientation) {
         const compass = document.createElement('div');
