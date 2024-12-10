@@ -70,29 +70,21 @@ io.on('connection', (socket) => {
     socket.emit('room-joined', roomId);
   });
 
-  // Update location
   socket.on('update-location', (roomId, locationData) => {
-    console.log('Location update for room:', roomId);
-    console.log('Location data:', locationData);
-
     if (rooms[roomId]) {
-      const userIndex = rooms[roomId].findIndex(
-        user => user.userId === locationData.userId
-      );
-      
-      if (userIndex > -1) {
-        rooms[roomId][userIndex] = {
-          ...rooms[roomId][userIndex],
-          ...locationData
-        };
-        
-        // Broadcast to other users in the room
-        socket.to(roomId).emit('location-updated', locationData);
-         // Broadcast updated location AND orientation to all users in room
-         io.to(roomId).emit('room-update', rooms[roomId]);
-      }
+        const userIndex = rooms[roomId].findIndex(
+            user => user.userId === locationData.userId
+        );
+        if (userIndex > -1) {
+            rooms[roomId][userIndex] = {
+                ...rooms[roomId][userIndex],
+                ...locationData
+            };
+            // Only emit the location-updated event
+            io.to(roomId).emit('location-updated', locationData);
+        }
     }
-  });
+});
 
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);

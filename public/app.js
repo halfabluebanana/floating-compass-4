@@ -42,7 +42,6 @@ class GeoShareApp {
 
         this.initEventListeners();
         this.setupLocationTracking();
-        this.setupOrientationTracking();
         this.heading = 0;
     }
 
