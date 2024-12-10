@@ -61,6 +61,14 @@ class GeoShareApp {
             }
         });
 
+        // In initEventListeners()
+        this.socket.on('location-updated', (userData) => {
+            if (this.otherUsers.has(userData.userId)) {
+                this.otherUsers.get(userData.userId).orientation = userData.orientation;
+                this.updateRoomUsers(Array.from(this.otherUsers.values()));
+            }
+        });
+
         this.socket.on('room-created', (roomId) => {
             this.roomId = roomId;
             console.log('Room created:', roomId);  // Debug log
@@ -228,7 +236,7 @@ class GeoShareApp {
         } else if (event.alpha) {
             heading = (360 - event.alpha) % 360;
         }
-    
+
         if (heading !== null && heading !== undefined && !isNaN(heading)) {
             this.heading = heading; // Store heading
             this.updateCompass(heading);
@@ -245,7 +253,7 @@ class GeoShareApp {
     }
 
     updateRoomUsers(users) {
-    
+
         this.otherUsers.clear();
         this.roomUsersElement.innerHTML = '<h3>Room Users</h3>';
         const compassContainer = document.getElementById('compass-container');
@@ -298,9 +306,10 @@ class GeoShareApp {
     }
 
     updateCompass(currentOrientation) {
-        const needle = document.querySelector('.compass .compass-needle');
-        if (needle) {
-            needle.style.transform = `translateX(-50%) rotate(${currentOrientation}deg)`;
+        // Update main compass only
+        const mainNeedle = document.querySelector('#compass-container .compass:first-child .compass-needle');
+        if (mainNeedle) {
+            mainNeedle.style.transform = `translateX(-50%) rotate(${currentOrientation}deg)`;
             console.log('Current heading:', currentOrientation);
         }
     }
