@@ -196,13 +196,15 @@ class GeoShareApp {
             if (event.webkitCompassHeading) {
                 // iOS devices
                 heading = event.webkitCompassHeading;
+                console.log('iOS heading:', heading);
             } else if (event.alpha) {
                 // Android devices
                 heading = (360 - event.alpha) % 360;
+                console.log('Android heading:', heading);
             }
     
             // Update compasses only if we have valid heading
-            if (heading !== null && heading !== undefined) {
+            if (heading !== null && heading !== undefined && !isNaN(heading)) {
                 this.updateCompasses(heading);
             }
     
