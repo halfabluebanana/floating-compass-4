@@ -282,7 +282,7 @@ class GeoShareApp {
         const mainCompass = document.createElement('div');
         mainCompass.className = 'compass';
         mainCompass.innerHTML = `
-            <div class="needle" id="main-needle" style="transform: rotate(${-currentOrientation}deg)"></div>
+            <div class="needle" id="main-needle" style="transform: translateX(-50%) rotate(${currentOrientation}deg)"></div>
             <div class="compass-label">Your Compass</div>
             <div class="compass-target">Pointing to: North</div>
         `;
@@ -299,14 +299,14 @@ class GeoShareApp {
                             userData.longitude
                         );
 
+                         // Calculate relative bearing based on current orientation
+                         const relativeAngle = (targetBearing - currentOrientation + 360) % 360;  // same formula throughout
+
                         const userCompass = document.createElement('div');
                         userCompass.className = 'compass';
 
-                        // Calculate relative bearing based on current orientation
-                        const relativeBearing = (targetBearing + currentOrientation + 360) % 360;
-
                         userCompass.innerHTML = `
-                            <div class="needle" style="transform: translateX(-50%) rotate(${relativeBearing}deg)"></div>
+                            <div class="needle" style="transform: translateX(-50%) rotate(${relativeAngle}deg)"></div>
                             <div class="compass-label">Points to User ${userId.substring(0, 4)}</div>
                             <div class="compass-target">Bearing: ${Math.round(targetBearing)}°</div>
                         `;
@@ -314,6 +314,7 @@ class GeoShareApp {
                     }
                 });
             } else {
+
                 // Point to Singapore
                 const targetBearing = this.calculateBearing(
                     this.currentLocation.latitude,
@@ -322,12 +323,12 @@ class GeoShareApp {
                     this.singaporeCoords.longitude
                 );
 
-                const relativeBearing = (targetBearing - currentOrientation + 360) % 360;
+                const relativeAngle = (targetBearing - currentOrientation + 360) % 360;  // same formula throughout
 
                 const userCompass = document.createElement('div');
                 userCompass.className = 'compass';
                 userCompass.innerHTML = `
-                <div class="needle" style="transform: translateX(-50%) rotate(${relativeBearing}deg)"></div>
+                <div class="needle" style="transform: translateX(-50%) rotate(${relativeAngle}deg)"></div>
                     <div class="compass-label">Points to Singapore</div>
                     <div class="compass-target">Bearing: ${Math.round(targetBearing)}°</div>
                 `;
