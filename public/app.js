@@ -286,9 +286,9 @@ class GeoShareApp {
     }
 
     updateCompass(currentOrientation) {
-        const compassNeedle = document.querySelector('.compass-needle');
-        if (compassNeedle) {
-            compassNeedle.style.transform = `translateX(-50%) rotate(${currentOrientation}deg)`;
+        const needle = document.querySelector('.compass .compass-needle');
+        if (needle) {
+            needle.style.transform = `translateX(-50%) rotate(${currentOrientation}deg)`;
             console.log('Current heading:', currentOrientation);
         }
     }
