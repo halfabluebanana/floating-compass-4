@@ -190,25 +190,23 @@ class GeoShareApp {
 
     setupOrientationTracking() {
         const handleOrientation = (event) => {
-            // Get compass heading (alpha) in degrees
-            let heading = event.webkitCompassHeading || event.alpha;
-
-            // Convert WebKit heading to standard orientation
+            // Get device orientation
+            let heading;
+            
             if (event.webkitCompassHeading) {
-                // WebKit compass heading is already in degrees clockwise from North
+                // iOS devices
                 heading = event.webkitCompassHeading;
             } else if (event.alpha) {
-                // Alpha is in degrees counter-clockwise from West
-                // Convert to clockwise from North
-                heading = (360 - event.alpha + 270) % 360;
+                // Android devices
+                heading = (360 - event.alpha) % 360;
             }
-
-            // Update compasses with the new heading
+    
+            // Update compasses only if we have valid heading
             if (heading !== null && heading !== undefined) {
                 this.updateCompasses(heading);
             }
-
-            // Broadcast orientation if in a room
+    
+            // Broadcast orientation
             if (this.roomId && this.currentLocation) {
                 this.socket.emit('update-location', this.roomId, {
                     userId: this.userId,
@@ -218,21 +216,23 @@ class GeoShareApp {
                 });
             }
         };
+    
 
-        // Request permission for iOS devices
         if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-            DeviceOrientationEvent.requestPermission()
-                .then(response => {
-                    if (response === 'granted') {
-                        window.addEventListener('deviceorientation', handleOrientation, true);
-                    }
-                })
-                .catch(console.error);
-        } else {
-            // Add listener directly for non-iOS devices
-            window.addEventListener('deviceorientation', handleOrientation, true);
-        }
+        DeviceOrientationEvent.requestPermission()
+            .then(response => {
+                if (response === 'granted') {
+                    window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+                    window.addEventListener('deviceorientation', handleOrientation, true);
+                }
+            })
+            .catch(console.error);
+    } else {
+        window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+        window.addEventListener('deviceorientation', handleOrientation, true);
     }
+}
+
 
     updateRoomUsers(users) {
         if (!users) {
@@ -277,17 +277,17 @@ class GeoShareApp {
     updateCompasses(currentOrientation = 0) {
         const compassContainer = document.getElementById('compass-container');
         compassContainer.innerHTML = '';
-
-        // Create main compass
+    
+        // Main compass (always points North)
         const mainCompass = document.createElement('div');
         mainCompass.className = 'compass';
         mainCompass.innerHTML = `
             <div class="needle" id="main-needle" style="transform: translateX(-50%) rotate(${currentOrientation}deg)"></div>
             <div class="compass-label">Your Compass</div>
-            <div class="compass-target">Pointing to: North</div>
+            <div class="compass-target">True North</div>
         `;
         compassContainer.appendChild(mainCompass);
-
+    
         if (this.currentLocation) {
             if (this.otherUsers.size > 0) {
                 this.otherUsers.forEach((userData, userId) => {
@@ -298,13 +298,11 @@ class GeoShareApp {
                             userData.latitude,
                             userData.longitude
                         );
-
-                         // Calculate relative bearing based on current orientation
-                         const relativeAngle = (targetBearing - currentOrientation + 360) % 360;  // same formula throughout
-
+                        
+                        const relativeAngle = (targetBearing - currentOrientation + 360) % 360;
+                        
                         const userCompass = document.createElement('div');
                         userCompass.className = 'compass';
-
                         userCompass.innerHTML = `
                             <div class="needle" style="transform: translateX(-50%) rotate(${relativeAngle}deg)"></div>
                             <div class="compass-label">Points to User ${userId.substring(0, 4)}</div>
@@ -314,21 +312,19 @@ class GeoShareApp {
                     }
                 });
             } else {
-
-                // Point to Singapore
                 const targetBearing = this.calculateBearing(
                     this.currentLocation.latitude,
                     this.currentLocation.longitude,
                     this.singaporeCoords.latitude,
                     this.singaporeCoords.longitude
                 );
-
-                const relativeAngle = (targetBearing - currentOrientation + 360) % 360;  // same formula throughout
-
+                
+                const relativeAngle = (targetBearing - currentOrientation + 360) % 360;
+                
                 const userCompass = document.createElement('div');
                 userCompass.className = 'compass';
                 userCompass.innerHTML = `
-                <div class="needle" style="transform: translateX(-50%) rotate(${relativeAngle}deg)"></div>
+                    <div class="needle" style="transform: translateX(-50%) rotate(${relativeAngle}deg)"></div>
                     <div class="compass-label">Points to Singapore</div>
                     <div class="compass-target">Bearing: ${Math.round(targetBearing)}°</div>
                 `;
