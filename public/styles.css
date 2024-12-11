@@ -84,6 +84,18 @@ body, html {
     position: relative;
 }
 
+/* Multi-user compass base styles */
+.map-grid.multi-user .compass {
+    position: absolute;
+    width: 120px;  /* Slightly smaller for mobile */
+    height: 120px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    /* Ensure compass stays above map */
+    z-index: 20;
+}
+
 .user-section {
     position: relative;
     overflow: hidden;
@@ -136,8 +148,8 @@ body, html {
 
 #permissions-container {
     position: fixed;
-    top: 400px;
-    left: 20px;
+    bottom: calc(50% - 65px);
+    left: calc(50% - 125px);
     z-index: 10;
     /* background: rgba(0, 0, 0, 0.7); */
     color: black;
@@ -155,7 +167,7 @@ body, html {
 
 .compass {
     position: absolute;
-    bottom: 30%;
+    bottom: 0%;
     left: 50%;
     transform: translate(-50%, -50%);
     width: 150px;
@@ -182,7 +194,7 @@ body, html {
 
 .compass-label {
     position: absolute;
-    top: -0px;
+    top: 0px;
     left: 0;
     width: 100%;
     text-align: center;
@@ -192,18 +204,22 @@ body, html {
 }
 
 #location-display {
-    position: fixed;
-    left: 20%;
-    transform: translateX(-50%);
-    /* background: rgba(255, 255, 255, 0.3); */
+    position: absolute;
+    display: block;
+    top: 10%;
+    left: 10%;
+    height: 100px;
+    /*transform: translateX(-50%);*/
+    background: rgba(255, 255, 255, 0.1);
     color: white;
-    padding: 3px;
+    padding: 10px;
     text-align: left;
-    backdrop-filter: blur(1px);
+    backdrop-filter: blur(2px);
 }
 
   button {
     background: black;
+    font-family: 'Courier New', Courier, monospace;
     color: white;
     border: none;
     padding: 10px 20px;
@@ -256,13 +272,52 @@ body, html {
 @media (max-width: 768px) {
     .map-grid:not(.multi-user) .user-section {
         width: 100%;
-        height: 100vh;
+        height: 33.33vh;
+        position: relative;
+        overflow: hidden;
       }
       
       .map-grid.multi-user .user-section {
         width: 100%;
         height: 33.33vh;
       }
+
+      /* Ensure map container is properly positioned */
+    .map-grid.multi-user .user-map {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+     /* Ensure user info doesn't overlap compass */
+     .map-grid.multi-user .user-info {
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 21;
+    }
+
+   
+
+    /* Compass positioning for mobile */
+    .map-grid.multi-user .compass {
+        width: 100px;  /* Even smaller for mobile */
+        height: 100px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+     /* Adjust compass needle for mobile */
+     .map-grid.multi-user .compass-needle {
+        width: 2px;  /* Slightly thinner for mobile */
+    }
+
+     
       
       .room-controls {
         top: auto;
@@ -282,19 +337,22 @@ body, html {
       }
       
       #permissions-container {
-        top: auto;
-        bottom: 20px;
-        right: 50%;
+
+        top: 50%;
+        left: calc(50% + 30px);
         transform: translateX(-50%);
         width: 90%;
         max-width: 300px;
       }
       
       .user-info {
-        bottom: 10px;
+        top: 10%;
       }
 
       #location-display {
-        bottom: 200px;
+        bottom: 0px;
+        left: 50%;
       }
+
+
 }
