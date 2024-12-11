@@ -215,9 +215,17 @@ const GeoShareApp = (() => {
 
                 navigator.geolocation.watchPosition((position) => {
                     const { latitude, longitude } = position.coords;
-                    // Update the location display
-                    this.updateLocationDisplay(latitude, longitude);
+
+                    // Update the location display immediately
+                    if (this.latitudeElement && this.longitudeElement) {
+                    this.latitudeElement.textContent = `Latitude: ${latitude.toFixed(6)}`;
+                    this.longitudeElement.textContent = `Longitude: ${longitude.toFixed(6)}`;
+                    }
+
+                    //store current location
                     this.currentLocation = { latitude, longitude };
+                    
+                    // update map
                     this.displayUserMap();
 
                     //get lat and long for each user
@@ -231,6 +239,16 @@ const GeoShareApp = (() => {
                     }
 
                     if (this.roomId) {
+                        // Update user info display
+                    const userInfoElement = document.querySelector(`[data-user-id="${this.userId}"] .user-info`);
+                    if (userInfoElement) {
+                        userInfoElement.innerHTML = `
+                            <div>You</div>
+                            <div>Lat: ${latitude.toFixed(6)}</div>
+                            <div>Long: ${longitude.toFixed(6)}</div>
+                        `;
+                    }
+
                         this.socket.emit('update-location', this.roomId, {
                             userId: this.userId,
                             latitude,
@@ -257,10 +275,17 @@ const GeoShareApp = (() => {
         async displayUserMap() {
             try {
                 if (this.currentLocation) {
+                    const { latitude, longitude } = this.currentLocation;
                     const latlon = `${this.currentLocation.latitude},${this.currentLocation.longitude}`;
-                    const mapImage = `https://maps.googleapis.com/maps/api/staticmap?center=${latlon}&zoom=18&size=1920x1080&maptype=satellite&sensor=false&key=AIzaSyCuFG-NOikYAj9JOBS3oD_nhuSxlu_T8v4`;
+                    const mapImage = `https://maps.googleapis.com/maps/api/staticmap?center=${latlon}&zoom=2&size=1920x1080&maptype=hybrid&sensor=false&key=AIzaSyCuFG-NOikYAj9JOBS3oD_nhuSxlu_T8v4`;
+                    
                     if (this.mapHolder) {
-                        this.mapHolder.innerHTML = `<img src="${mapImage}" alt="Map">`;
+                        const img = new Image();
+                        img.src = mapImage;
+                        img.onload = () => {
+                            this.mapHolder.innerHTML = '';
+                            this.mapHolder.appendChild(img);
+                        };
                     }
                 }
             } catch (error) {
@@ -331,7 +356,7 @@ const GeoShareApp = (() => {
                     const userMap = document.createElement('div');
                     userMap.className = 'user-map';
                     const latlon = `${user.latitude},${user.longitude}`;
-                    const mapImage = `https://maps.googleapis.com/maps/api/staticmap?center=${latlon}&zoom=18&size=1920x1080&maptype=satellite&sensor=false&key=AIzaSyCuFG-NOikYAj9JOBS3oD_nhuSxlu_T8v4`;
+                    const mapImage = `https://maps.googleapis.com/maps/api/staticmap?center=${latlon}&zoom=20&size=1920x1080&maptype=hybrid&sensor=false&key=AIzaSyCuFG-NOikYAj9JOBS3oD_nhuSxlu_T8v4`;
                     userMap.innerHTML = `<img src="${mapImage}" alt="Map">`;
                     userSection.appendChild(userMap);
         
