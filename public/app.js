@@ -1,5 +1,6 @@
 const GeoShareApp = (() => {
     class GeoShareApp {
+
         constructor() {
             this.socket = io(window.location.origin);
             this.socket.on('connect', () => console.log('Socket connected successfully'));
@@ -114,7 +115,6 @@ const GeoShareApp = (() => {
                     });
                 }
             }
-
         }
 
         initEventListeners() {
@@ -207,12 +207,18 @@ const GeoShareApp = (() => {
 
         setupLocationTracking() {
             if ('geolocation' in navigator) {
+                const options = {
+                    enableHighAccuracy: true,
+                    maximumAge: 0,
+                    timeout: 5000
+                };
+
                 navigator.geolocation.watchPosition((position) => {
                     const { latitude, longitude } = position.coords;
-
-                    this.latitudeElement.textContent = `Latitude: ${latitude.toFixed(4)}`;
-                    this.longitudeElement.textContent = `Longitude: ${longitude.toFixed(4)}`;
+                    // Update the location display
+                    this.updateLocationDisplay(latitude, longitude);
                     this.currentLocation = { latitude, longitude };
+                    this.displayUserMap();
 
                     //get lat and long for each user
                     const userInfoElement = document.querySelector(`[data-user-id="${this.userId}"] .user-info`);
@@ -223,8 +229,6 @@ const GeoShareApp = (() => {
                             <div>Long: ${longitude.toFixed(4)}</div>
                         `;
                     }
-
-                    this.displayUserMap();
 
                     if (this.roomId) {
                         this.socket.emit('update-location', this.roomId, {
@@ -238,8 +242,16 @@ const GeoShareApp = (() => {
                     console.error('Error getting location', error);
                     this.latitudeElement.textContent = 'Location unavailable';
                     this.longitudeElement.textContent = 'Location unavailable';
-                });
+                }, options);
             }
+        }
+
+        updateLocationDisplay(latitude, longitude) {
+            const latDisplay = latitude ? latitude.toFixed(6) : 'N/A';
+            const lonDisplay = longitude ? longitude.toFixed(6) : 'N/A';
+
+            document.getElementById('latitude').textContent = `Latitude: ${latDisplay}`;
+            document.getElementById('longitude').textContent = `Longitude: ${lonDisplay}`;
         }
 
         async displayUserMap() {
@@ -262,7 +274,7 @@ const GeoShareApp = (() => {
         initializeCompass() {
             if (this.compassContainer) {
                 this.compassContainer.innerHTML = '';
-                const mainCompass = this.createCompass('My Compass', this.heading);
+                const mainCompass = this.createCompass('there you are', this.heading);
                 this.compassContainer.appendChild(mainCompass);
             }
         }
@@ -286,26 +298,34 @@ const GeoShareApp = (() => {
         }
 
         updateRoomUsers(users) {
-            if (!users || !Array.isArray(users)) return; //check, if users is not an array exit immediately
-
+            if (!users || !Array.isArray(users)) return;
+        
+            const mapHolder = document.getElementById('mapholder');
             const mapContainer = document.getElementById('map-container');
             mapContainer.innerHTML = ''; // Clear existing content
-
+        
+            // Hide single user view if multiple users
+            if (users.length > 1) {
+                mapHolder.style.display = 'none';
+            } else {
+                mapHolder.style.display = 'block';
+            }
+        
             // Create grid container
             const grid = document.createElement('div');
             grid.className = `map-grid ${users.length > 1 ? 'multi-user' : ''}`;
-
+        
             this.otherUsers.clear();
-            this.roomUsersElement.innerHTML = '<h3>Who Is Here</h3>';
-
+            this.roomUsersElement.innerHTML = '<h3>who else is here</h3>';
+        
             users.forEach(user => {
                 if (!user) return;
-
+        
                 // Create section for each user
                 const userSection = document.createElement('div');
                 userSection.className = 'user-section';
                 userSection.setAttribute('data-user-id', user.userId);
-
+        
                 // Create map background
                 if (user.latitude && user.longitude) {
                     const userMap = document.createElement('div');
@@ -314,53 +334,53 @@ const GeoShareApp = (() => {
                     const mapImage = `https://maps.googleapis.com/maps/api/staticmap?center=${latlon}&zoom=18&size=1920x1080&maptype=satellite&sensor=false&key=AIzaSyCuFG-NOikYAj9JOBS3oD_nhuSxlu_T8v4`;
                     userMap.innerHTML = `<img src="${mapImage}" alt="Map">`;
                     userSection.appendChild(userMap);
+        
+                    // Add user info (lat/long)
+                    const userInfo = document.createElement('div');
+                    userInfo.className = 'user-info';
+                    const lat = user.latitude?.toFixed(4) || 'N/A';
+                    const lon = user.longitude?.toFixed(4) || 'N/A';
+                    userInfo.innerHTML = `
+                        <div>${user.userId === this.userId ? 'You' : `User ${user.userId.substring(0, 4)}`}</div>
+                        <div>Lat: ${lat}</div>
+                        <div>Long: ${lon}</div>
+                    `;
+                    userSection.appendChild(userInfo);
+        
+                    // Add compass for each user
+                    const compass = document.createElement('div');
+                    compass.className = 'compass';
+                    compass.setAttribute('data-user-id', user.userId);
+                    compass.innerHTML = `
+                        <div class="compass-needle" style="transform: translateX(-50%) rotate(${user.orientation || 0}deg)"></div>
+                        <div class="compass-label">${user.userId === this.userId ? 'You' : `User ${user.userId.substring(0, 4)}`}</div>
+                    `;
+                    userSection.appendChild(compass);
+        
+                    // Add to room users list
+                    const userDiv = document.createElement('div');
+                    userDiv.textContent = `${user.userId === this.userId ? 'You' : `User ${user.userId.substring(0, 4)}`}: ${lat}, ${lon}`;
+                    this.roomUsersElement.appendChild(userDiv);
                 }
-
-                // Add user info (lat/long)
-                const userInfo = document.createElement('div');
-                userInfo.className = 'user-info';
-                const lat = user.latitude?.toFixed(4) || 'N/A';
-                const lon = user.longitude?.toFixed(4) || 'N/A';
-                userInfo.innerHTML = `
-            <div>${user.userId === this.userId ? 'You' : `User ${user.userId.substring(0, 4)}`}</div>
-            <div>Lat: ${lat}</div>
-            <div>Long: ${lon}</div>
-        `;
-                userSection.appendChild(userInfo);
-
-                // Add compass
-                const compass = this.createCompass(
-                    user.userId === this.userId ? 'You' : `User ${user.userId.substring(0, 4)}`,
-                    user.orientation || 0
-                );
-                compass.setAttribute('data-user-id', user.userId);
-                userSection.appendChild(compass);
-
+        
                 grid.appendChild(userSection);
-
+        
                 // Update other users collection
                 if (user.userId !== this.userId) {
                     this.otherUsers.set(user.userId, user);
                 }
-
-                // Add to room users list
-                const userDiv = document.createElement('div');
-                userDiv.textContent = `${user.userId === this.userId ? 'You' : `User ${user.userId.substring(0, 4)}`}: ${lat}, ${lon}`;
-                this.roomUsersElement.appendChild(userDiv);
             });
-
+        
             mapContainer.appendChild(grid);
         }
-
     }
-
+        
     // Initialize the app when the page loads
     document.addEventListener('DOMContentLoaded', () => {
         window.app = new GeoShareApp();
     });
-
     return GeoShareApp;
-})();
+})(); //close IIFEs
 
 // Export for module systems
 if (typeof module !== 'undefined' && module.exports) {
