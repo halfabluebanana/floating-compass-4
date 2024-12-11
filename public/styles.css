@@ -317,15 +317,15 @@ body, html {
         width: 2px;  /* Slightly thinner for mobile */
     }
 
-     
       
       .room-controls {
         top: auto;
-        bottom: -30px;
+        bottom: 80px;
         right: 50%;
         transform: translateX(50%);
-        width: 20%;
-        max-width: 100px;
+        max-width: 40vw;
+        max-width: 200px;
+        
     }
 
       #app {
