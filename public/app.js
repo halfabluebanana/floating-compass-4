@@ -286,7 +286,7 @@ const GeoShareApp = (() => {
         }
 
         updateRoomUsers(users) {
-            if (!users || !Array.isArray(users)) return;
+            if (!users || !Array.isArray(users)) return; //check, if users is not an array exit immediately
 
             const mapContainer = document.getElementById('map-container');
             mapContainer.innerHTML = ''; // Clear existing content
