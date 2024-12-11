@@ -214,6 +214,16 @@ const GeoShareApp = (() => {
                     this.longitudeElement.textContent = `Longitude: ${longitude.toFixed(4)}`;
                     this.currentLocation = { latitude, longitude };
 
+                    //get lat and long for each user
+                    const userInfoElement = document.querySelector(`[data-user-id="${this.userId}"] .user-info`);
+                    if (userInfoElement) {
+                        userInfoElement.innerHTML = `
+                            <div>${'You'}</div>
+                            <div>Lat: ${latitude.toFixed(4)}</div>
+                            <div>Long: ${longitude.toFixed(4)}</div>
+                        `;
+                    }
+
                     this.displayUserMap();
 
                     if (this.roomId) {
@@ -278,68 +288,69 @@ const GeoShareApp = (() => {
         updateRoomUsers(users) {
             if (!users || !Array.isArray(users)) return;
 
-
             const mapContainer = document.getElementById('map-container');
             mapContainer.innerHTML = ''; // Clear existing content
 
             // Create grid container
             const grid = document.createElement('div');
-            grid.className = `map-grid ${users.length > 2 ? 'multi-user' : ''}`;
+            grid.className = `map-grid ${users.length > 1 ? 'multi-user' : ''}`;
 
             this.otherUsers.clear();
             this.roomUsersElement.innerHTML = '<h3>Who Is Here</h3>';
 
             users.forEach(user => {
                 if (!user) return;
+
                 // Create section for each user
-        const userSection = document.createElement('div');
-        userSection.className = 'user-section';
-        
-        // Create map background
-        if (user.latitude && user.longitude) {
-            const userMap = document.createElement('div');
-            userMap.className = 'user-map';
-            const latlon = `${user.latitude},${user.longitude}`;
-            const mapImage = `https://maps.googleapis.com/maps/api/staticmap?center=${latlon}&zoom=18&size=1920x1080&maptype=satellite&sensor=false&key=AIzaSyCuFG-NOikYAj9JOBS3oD_nhuSxlu_T8v4`;
-            userMap.innerHTML = `<img src="${mapImage}" alt="Map">`;
-            userSection.appendChild(userMap);
-        }
-        
-        // Add user info (lat/long)
-        const userInfo = document.createElement('div');
-        userInfo.className = 'user-info';
-        const lat = user.latitude?.toFixed(4) || 'N/A';
-        const lon = user.longitude?.toFixed(4) || 'N/A';
-        userInfo.innerHTML = `
+                const userSection = document.createElement('div');
+                userSection.className = 'user-section';
+                userSection.setAttribute('data-user-id', user.userId);
+
+                // Create map background
+                if (user.latitude && user.longitude) {
+                    const userMap = document.createElement('div');
+                    userMap.className = 'user-map';
+                    const latlon = `${user.latitude},${user.longitude}`;
+                    const mapImage = `https://maps.googleapis.com/maps/api/staticmap?center=${latlon}&zoom=18&size=1920x1080&maptype=satellite&sensor=false&key=AIzaSyCuFG-NOikYAj9JOBS3oD_nhuSxlu_T8v4`;
+                    userMap.innerHTML = `<img src="${mapImage}" alt="Map">`;
+                    userSection.appendChild(userMap);
+                }
+
+                // Add user info (lat/long)
+                const userInfo = document.createElement('div');
+                userInfo.className = 'user-info';
+                const lat = user.latitude?.toFixed(4) || 'N/A';
+                const lon = user.longitude?.toFixed(4) || 'N/A';
+                userInfo.innerHTML = `
             <div>${user.userId === this.userId ? 'You' : `User ${user.userId.substring(0, 4)}`}</div>
             <div>Lat: ${lat}</div>
             <div>Long: ${lon}</div>
         `;
-        userSection.appendChild(userInfo);
-        
-        // Add compass
-        const compass = this.createCompass(
-            user.userId === this.userId ? 'You' : `User ${user.userId.substring(0, 4)}`,
-            user.orientation || 0
-        );
-        compass.setAttribute('data-user-id', user.userId);
-        userSection.appendChild(compass);
-        
-        grid.appendChild(userSection);
+                userSection.appendChild(userInfo);
 
-        // Update other users collection
-        if (user.userId !== this.userId) {
-            this.otherUsers.set(user.userId, user);
+                // Add compass
+                const compass = this.createCompass(
+                    user.userId === this.userId ? 'You' : `User ${user.userId.substring(0, 4)}`,
+                    user.orientation || 0
+                );
+                compass.setAttribute('data-user-id', user.userId);
+                userSection.appendChild(compass);
+
+                grid.appendChild(userSection);
+
+                // Update other users collection
+                if (user.userId !== this.userId) {
+                    this.otherUsers.set(user.userId, user);
+                }
+
+                // Add to room users list
+                const userDiv = document.createElement('div');
+                userDiv.textContent = `${user.userId === this.userId ? 'You' : `User ${user.userId.substring(0, 4)}`}: ${lat}, ${lon}`;
+                this.roomUsersElement.appendChild(userDiv);
+            });
+
+            mapContainer.appendChild(grid);
         }
-
-        // Add to room users list
-        const userDiv = document.createElement('div');
-        userDiv.textContent = `${user.userId === this.userId ? 'You' : `User ${user.userId.substring(0, 4)}`}: ${lat}, ${lon}`;
-        this.roomUsersElement.appendChild(userDiv);
-    });
-
-    mapContainer.appendChild(grid);
-}
 
     }
 

@@ -27,11 +27,11 @@ body {
     min-width: 300px;
 }
 
-.map-grid{
+.map-grid {
     width: 100%;
-  height: 100%;
-  display: flex;
-  flex-wrap: wrap;
+    height: 100%;
+    display: flex;
+    flex-wrap: wrap;
 }
 
 /* For 1 user */
@@ -41,16 +41,9 @@ body {
 
 /* For 2 users */
 .map-grid:not(.multi-user) .user-section {
-    width: 50%;
-    height: 50vh;
+    width: 100%;
+    height: 100vh;
     flex: 1;
-    position: relative
-}
-
-/* For > 2 users */
-.map-grid.multi-user {
-    display: flex;
-    flex-wrap: wrap;
 }
 
 .map-grid.multi-user .user-section {
@@ -73,7 +66,7 @@ body {
     object-fit: cover;
 }
 
-//this displays the lat long of the user
+/*this displays the lat long of the user */
 .user-info {
     position: absolute;
     bottom: 80px;
@@ -142,7 +135,7 @@ body {
         width: 100%;
         height: 50vh;
     }
-    
+
     .map-grid.multi-user .user-section {
         width: 100%;
         height: 33.33vh;
