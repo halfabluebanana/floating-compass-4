@@ -210,7 +210,7 @@ body, html {
     left: 10%;
     height: 100px;
     /*transform: translateX(-50%);*/
-    background: rgba(255, 255, 255, 0.1);
+    /* background: rgba(255, 255, 255, 0.1); */
     color: white;
     padding: 10px;
     text-align: left;
@@ -321,7 +321,7 @@ body, html {
       
       .room-controls {
         top: auto;
-        bottom: 0px;
+        bottom: -30px;
         right: 50%;
         transform: translateX(50%);
         width: 20%;
