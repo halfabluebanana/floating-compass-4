@@ -25,6 +25,7 @@ const GeoShareApp = (() => {
 
             this.initEventListeners();
             this.checkPermissionStatus();
+            this.initializeHamburgerMenu();
         }
 
         generateUserId() {
@@ -129,6 +130,57 @@ handleOrientation(event) {
     }
 }
 
+// In your GeoShareApp class
+initializeHamburgerMenu() {
+    const hamburgerBtn = document.getElementById('hamburger-menu');
+    const sidePanel = document.getElementById('side-panel');
+    
+    // Add click handler with logging
+    hamburgerBtn?.addEventListener('click', (e) => {
+        console.log('Hamburger clicked'); // Debug log
+        e.stopPropagation(); // Prevent event from bubbling
+        
+        if (sidePanel) {
+            sidePanel.classList.toggle('open');
+            console.log('Panel state:', sidePanel.classList.contains('open')); // Debug log
+        }
+    });
+
+    // Close panel when clicking outside
+    document.addEventListener('click', (e) => {
+        const clickedInsidePanel = sidePanel?.contains(e.target);
+        const clickedHamburger = hamburgerBtn?.contains(e.target);
+        
+        if (sidePanel?.classList.contains('open') && !clickedInsidePanel && !clickedHamburger) {
+            sidePanel.classList.remove('open');
+        }
+    });
+}
+
+
+// initializeSidePanel() {
+//     const toggleButton = document.getElementById('panel-toggle');
+//     const sidePanel = document.getElementById('side-panel');
+    
+//     // Initially hide the toggle button
+//     toggleButton.style.display = 'none';
+
+//     toggleButton.addEventListener('click', () => {
+//         sidePanel.classList.toggle('open');
+//         toggleButton.textContent = sidePanel.classList.contains('open') ? 'Close' : 'Room Controls';
+//     });
+
+//     // Close panel when clicking outside
+//     document.addEventListener('click', (e) => {
+//         if (!sidePanel.contains(e.target) && 
+//             !toggleButton.contains(e.target) && 
+//             sidePanel.classList.contains('open')) {
+//             sidePanel.classList.remove('open');
+//             toggleButton.textContent = 'Room Controls';
+//         }
+//     });
+// }
+
 initEventListeners() {
     this.createRoomBtn?.addEventListener('click', () => this.createRoom());
     this.joinRoomBtn?.addEventListener('click', () => this.joinRoom());
@@ -167,6 +219,19 @@ initEventListeners() {
         this.roomId = roomId;
         this.roomLinkDisplay.innerHTML = `<strong>Joined Room:</strong> ${roomId}`;
 
+        //  // Show hamburger menu when joining a room
+        //  const hamburgerBtn = document.getElementById('hamburger-menu');
+        //  if (hamburgerBtn) {
+        //      hamburgerBtn.style.display = 'block';
+        //      console.log('Showing hamburger menu');
+        //  }
+ 
+        // // Show the panel toggle button when joining a room
+        // const toggleButton = document.getElementById('panel-toggle');
+        // if (toggleButton) {
+        //     toggleButton.style.display = 'block';
+        // }
+
         // Hide initial elements when joining a room
         const elementsToHide = [
             document.getElementById('location-display'),
@@ -179,7 +244,7 @@ initEventListeners() {
                 element.style.display = 'none';
             }
         });
-        
+
         if (this.currentLocation) {
             this.socket.emit('update-location', roomId, {
                 userId: this.userId,
@@ -193,6 +258,19 @@ initEventListeners() {
         console.log('Room users updated:', users);
         this.updateRoomUsers(users);
     });
+
+    // Add handler for leaving room
+    this.socket.on('room-left', () => {
+        const toggleButton = document.getElementById('panel-toggle');
+        const sidePanel = document.getElementById('side-panel');
+        if (toggleButton) {
+            toggleButton.style.display = 'none';
+        }
+        if (sidePanel) {
+            sidePanel.classList.remove('open');
+        }
+    });
+
 
     this.checkUrlForRoom();
 }

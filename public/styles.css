@@ -1,4 +1,5 @@
-body, html {
+body,
+html {
     margin: 0;
     padding: 0;
     width: 100%;
@@ -9,8 +10,8 @@ body, html {
 
 .map-user-container {
     position: fixed;
-    top: 0;
-    left: 0;
+    top: 100;
+    left: 100;
     width: 100%;
     height: 100vh;
     overflow: hidden;
@@ -24,7 +25,7 @@ body, html {
     height: 100vh;
     /* display: flex; */
     /* flex-wrap: wrap; */
-    /* z-index: 1; */
+ 
 }
 
 #mapholder {
@@ -50,11 +51,13 @@ body, html {
     width: 100%;
     height: 100%;
     z-index: 10;
-    pointer-events: none; /* Allows clicks to pass through to map */
+    pointer-events: none;
+    /* Allows clicks to pass through to map */
 }
 
-.overlay-container > * {
-    pointer-events: auto; /* Re-enables clicks for overlay elements */
+.overlay-container>* {
+    pointer-events: auto;
+    /* Re-enables clicks for overlay elements */
 }
 
 .user-section {
@@ -87,7 +90,8 @@ body, html {
 /* Multi-user compass base styles */
 .map-grid.multi-user .compass {
     position: absolute;
-    width: 120px;  /* Slightly smaller for mobile */
+    width: 120px;
+    /* Slightly smaller for mobile */
     height: 120px;
     top: 50%;
     left: 50%;
@@ -156,9 +160,9 @@ body, html {
     /* padding: 20px; */
     border-radius: 10px;
     /* backdrop-filter: blur(4px); */
-  }
+}
 
-  #compass-container {
+#compass-container {
     position: absolute;
     bottom: 30%;
     left: 50%;
@@ -217,45 +221,137 @@ body, html {
     backdrop-filter: blur(2px);
 }
 
-  button {
-    background: black;
+button {
+    background: blanchedalmond;
+    backdrop-filter: blur(2px);
     font-family: 'Courier New', Courier, monospace;
-    color: white;
+    color: none;
     border: none;
-    padding: 10px 20px;
+    padding: 10px 10px;
     border-radius: 5px;
+    border-color: blanchedalmond;
     cursor: pointer;
-    margin: 5px 0;
+    margin: 0px 0px;
     transition: background 0.3s ease;
-  }
-  
-  button:hover {
-    background: white;
-    color: black;
-  }
+    width: 80px;
+}
 
-  input[type="text"] {
+button:hover {
+    background: rgb(255, 255, 255, 0.8);
+    color: none;
+}
+
+.input[type="text"] {
     padding: 8px;
     border: 1px solid #ddd;
     border-radius: 4px;
     margin-right: 5px;
     width: calc(100% - 16px);
     margin-bottom: 10px;
-  }
-  
-  .room-controls {
-    position: absolute;
+}
+
+/* Hamburger Menu Button */
+.hamburger-menu {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    z-index: 2000;
+    padding: 8px;
+}
+
+.hamburger-menu span {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: white;
+    margin: 6px auto;
+    transition: all 0.3s ease;
+}
+
+.hamburger-menu:hover {
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.hamburger-menu:hover span {
+    background: black;
+}
+
+.side-panel {
+    position: fixed;
+    right: -1000px;
+    top: 0;
+    width: 300px;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    z-index: 1900;
+    /* transition: right 0.3s ease; */
+    color: white;
+    padding: 20px;
+    box-sizing: border-box;
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+}
+
+.side-panel.open {
+    right: 0;
+}
+
+#panel-toggle {
+    position: fixed;
+    right: 20px;
+    top: 20px;
+    background: rgba(0, 0, 0, 0.5);
+    color: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    z-index: 2000;
+    /* Increased z-index to ensure visibility */
+    /* backdrop-filter: blur(5px); */
+    font-size: 16px;
+    font-weight: bold;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+/* #panel-toggle:hover {
+    /* background: white;
+    color: black;
+    transform: scale(1.05);
+ }  */
+
+.room-controls {
+    margin-top: 20px;
+    /* position: absolute;
     bottom: 20%;
     right: 10%;
     max-width: 50vw;
     /* background: rgba(0, 0, 0, 0.7); */
-    color: white;
+    /* color: white;
     padding: 20px;
-    border-radius: 10px;
+    border-radius: 10px; */
     /* backdrop-filter: blur(5px); */
-  }
+}
 
-  .join-room {
+.room-controls button {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.room-info {
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+
+.join-room {
     margin-top: 10px;
 }
 
@@ -263,11 +359,15 @@ body, html {
     margin-top: 10px;
     color: white;
 }
-  
-  #room-link-display {
+
+#room-users h3 {
+    margin-bottom: 10px;
+}
+
+#room-link-display {
     margin-top: 10px;
     word-break: break-all;
-  }
+}
 
 @media (max-width: 768px) {
     .map-grid:not(.multi-user) .user-section {
@@ -275,14 +375,14 @@ body, html {
         height: 33.33vh;
         position: relative;
         overflow: hidden;
-      }
-      
-      .map-grid.multi-user .user-section {
+    }
+
+    .map-grid.multi-user .user-section {
         width: 100%;
         height: auto;
-      }
+    }
 
-      /* Ensure map container is properly positioned */
+    /* Ensure map container is properly positioned */
     .map-grid.multi-user .user-map {
         position: absolute;
         top: 0;
@@ -291,8 +391,8 @@ body, html {
         height: 100%;
     }
 
-     /* Ensure user info doesn't overlap compass */
-     .map-grid.multi-user .user-info {
+    /* Ensure user info doesn't overlap compass */
+    .map-grid.multi-user .user-info {
         position: absolute;
         top: 10px;
         left: 50%;
@@ -300,11 +400,10 @@ body, html {
         z-index: 21;
     }
 
-   
-
     /* Compass positioning for mobile */
     .map-grid.multi-user .compass {
-        width: 100px;  /* Even smaller for mobile */
+        width: 100px;
+        /* Even smaller for mobile */
         height: 100px;
         position: absolute;
         top: 50%;
@@ -312,47 +411,49 @@ body, html {
         transform: translate(-50%, -50%);
     }
 
-     /* Adjust compass needle for mobile */
-     .map-grid.multi-user .compass-needle {
-        width: 2px;  /* Slightly thinner for mobile */
+    /* Adjust compass needle for mobile */
+    .map-grid.multi-user .compass-needle {
+        width: 2px;
+        /* Slightly thinner for mobile */
     }
 
-      
-      .room-controls {
+    .room-controls {
         top: auto;
         bottom: 80px;
         right: 50%;
         transform: translateX(50%);
         max-width: 40vw;
         max-width: 200px;
-        
     }
 
-      #app {
+    #app {
         top: auto;
         bottom: 20px;
         right: 50%;
         transform: translateX(50%);
         max-width: 90%;
-      }
-      
-      #permissions-container {
+    }
+
+    #permissions-container {
 
         top: 50%;
         left: calc(50% + 30px);
         transform: translateX(-50%);
         width: 90%;
         max-width: 300px;
-      }
-      
-      .user-info {
-        top: 10%;
-      }
+    }
 
-      #location-display {
+    .user-info {
+        top: 10%;
+    }
+
+    #location-display {
         bottom: 0px;
         left: 50%;
-      }
+    }
 
+    .side-panel {
+       right: 0;
+    }
 
 }

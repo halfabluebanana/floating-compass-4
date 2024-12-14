@@ -1,51 +1,70 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Floating Some</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Float Some</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
-    <div class="map-user-container">
-        <div id="mapholder"></div>
-        <div id="map-container"></div>
+  <div class="map-user-container">
+    <div id="mapholder"></div>
+    <div id="map-container"></div>
 
-        <!-- Overlaid elements -->
-        <div class="overlay-container">
-            <!-- Permissions -->
-            <div id="permissions-container">
-                <div id="permissions-status"></div>
-                <button id="enable-permissions">Enable Location Sharing & Compass</button>
-            </div>
+    <!-- Overlaid elements -->
+    <div class="overlay-container">
+      <button class="hamburger-menu" id="hamburger-menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
 
-            <!-- Compass -->
-            <div id="compass-container">
-                <div class="compass">
-                    <div class="compass-needle"></div>
-                </div>
-            </div>
-
-            <!-- Location Display -->
-            <div id="location-display">
-                <p>Where Are You</p>
-                <p id="latitude">Latitude: N/A</p>
-                <p id="longitude">Longitude: N/A</p>
-            </div>
-
-            <!-- Room Controls -->
-            <div class="room-controls">
-                <button id="create-room-btn">Create Sharing Link</button>
-                <div class="join-room">
-                    <input type="text" id="room-input" placeholder="Enter Room ID">
-                    <button id="join-room-btn">Join Room</button>
-                </div>
-                <div id="room-users"></div>
-                <div id="room-link-display"></div>
-            </div>
+      <!-- Side Panel -->
+      <div class="side-panel" id="side-panel">
+        <div class="room-info">
+          <div id="room-link-display"></div>
         </div>
+
+        <!-- Room Controls -->
+        <div class="room-controls">
+          <button id="create-room-btn">Create Sharing Link</button>
+          <div class="join-room">
+            <input type="text" id="room-input" placeholder="Enter Room ID">
+            <button id="join-room-btn">Join Room</button>
+          </div>
+        </div>
+
+        <div id="room-users">
+          <h3>who else is here</h3>
+        </div>
+      </div>
+
+      <!-- Permissions -->
+      <div id="permissions-container">
+        <div id="permissions-status"></div>
+        <button id="enable-permissions">Enable Location Sharing & Compass</button>
+      </div>
+
+      <!-- Compass -->
+      <div id="compass-container">
+        <div class="compass">
+          <div class="compass-needle"></div>
+        </div>
+      </div>
+
+      <!-- Location Display -->
+      <div id="location-display">
+        <p>Where Are You</p>
+        <p id="latitude">Latitude: N/A</p>
+        <p id="longitude">Longitude: N/A</p>
+      </div>
     </div>
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="app.js"></script>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
 </body>
+
 </html>
