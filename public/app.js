@@ -130,19 +130,32 @@ handleOrientation(event) {
     }
 }
 
-// In your GeoShareApp class
 initializeHamburgerMenu() {
     const hamburgerBtn = document.getElementById('hamburger-menu');
     const sidePanel = document.getElementById('side-panel');
     
-    // Add click handler with logging
+    const togglePanel = () => {
+        if (sidePanel) {
+            sidePanel.classList.toggle('open');
+            console.log('Panel toggled:', sidePanel.classList.contains('open'));
+        }
+    };
+
+    // click handler
     hamburgerBtn?.addEventListener('click', (e) => {
         console.log('Hamburger clicked'); // Debug log
         e.stopPropagation(); // Prevent event from bubbling
         
         if (sidePanel) {
-            sidePanel.classList.toggle('open');
-            console.log('Panel state:', sidePanel.classList.contains('open')); // Debug log
+            const isOpen = sidePanel.classList.contains('open');
+            
+            if (isOpen) {
+                sidePanel.classList.remove('open');
+                console.log('Panel closing');
+            } else {
+                sidePanel.classList.add('open');
+                console.log('Panel opening');
+            }
         }
     });
 
@@ -151,8 +164,11 @@ initializeHamburgerMenu() {
         const clickedInsidePanel = sidePanel?.contains(e.target);
         const clickedHamburger = hamburgerBtn?.contains(e.target);
         
-        if (sidePanel?.classList.contains('open') && !clickedInsidePanel && !clickedHamburger) {
+        if (!sidePanel?.contains(e.target) && 
+            !hamburgerBtn?.contains(e.target) && 
+            sidePanel?.classList.contains('open')) {
             sidePanel.classList.remove('open');
+            console.log('Panel closing from outside click');
         }
     });
 }
