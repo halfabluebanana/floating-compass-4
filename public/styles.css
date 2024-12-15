@@ -152,8 +152,9 @@ html {
 
 #permissions-container {
     position: fixed;
-    bottom: calc(50% - 65px);
-    left: calc(50% - 125px);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     text-align: center;
     width: auto;
     min-width: 200px;
@@ -393,7 +394,7 @@ input[type="text"] {
         height: auto;
     }
 
-    /* Ensure map container is properly positioned */
+    /* Map container */
     .map-grid.multi-user .user-map {
         position: absolute;
         top: 0;
@@ -414,7 +415,6 @@ input[type="text"] {
     /* Compass positioning for mobile */
     .map-grid.multi-user .compass {
         width: 100px;
-        /* Even smaller for mobile */
         height: 100px;
         position: absolute;
         top: 50%;
@@ -422,10 +422,10 @@ input[type="text"] {
         transform: translate(-50%, -50%);
     }
 
-    /* Adjust compass needle for mobile */
+    /* compass needle for mobile */
     .map-grid.multi-user .compass-needle {
         width: 2px;
-        /* Slightly thinner for mobile */
+        
     }
 
 
@@ -438,11 +438,10 @@ input[type="text"] {
     }
 
     #permissions-container {
-
         top: 50%;
         left: calc(50% + 30px);
         transform: translateX(-50%);
-        max-width: 300px;
+        width: 40%
 
     }
 
